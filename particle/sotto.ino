@@ -1,39 +1,53 @@
-//Here's a very simple version
+#include "MPU6050.h"
 
-#include "math.h"
-#include "ADXL345.h"
+int led=D7;
 
-ADXL345 Accel;
-double x;
-double y;
-double z;
+int maxVal=32767;
+int minVal=-32768;
 
-int i=0;
+int tapState=0;
 
-void setup(){
-  Serial.begin(9600);
-  Wire.begin();
-  Accel.set_bw(ADXL345_BW_12);
-  Serial.print("BW_OK? ");
-  Serial.println(Accel.status, DEC);
-  delay(1000);
+// MPU variables:
+MPU6050 accelgyro;
+int16_t ax, ay, az;
+int16_t gx, gy, gz;
+
+
+void setup() {
+
+    Wire.begin();
+    Serial.begin(9600);
+
 }
 
-void loop(){
-    double accData[3];
-    Accel.get_Gxyz(accData);
-    x=accData[0];
-    y=accData[1];
-    z=accData[2];
+void loop() {
+    // read raw accel/gyro measurements from device
+    accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+    // the main one of interest here is gy, which tells us the angular momentum of the tapping finger
 
-    // left hand orientation: relies on y, on 0 going to 245
-    // left hand on: 0 255 0
+    if (gy==maxVal) {
+      // downstroke happening
+      if (tapState==0) {
+        Serial.println("down");
+        tapState=1;
+        digitalWrite(led,HIGH);
+      }
+    }
+    else if (gy==minVal) {
+      // upstroke happening
+      if (tapState==1) {
+        Serial.println("up");
+        tapState=0;
+        digitalWrite(led,LOW);
+      }
+    }
 
-    if (y>200) {
-      // then you have depressed a key
-      Serial.println("key pressed...");
-    }
-    else {
-      Serial.println();
-    }
+    /*Serial.print("a/g:\t");
+    Serial.print(ax); Serial.print("\t");
+    Serial.print(ay); Serial.print("\t");
+    Serial.print(az); Serial.print("\t");
+    Serial.print(gx); Serial.print("\t");
+    Serial.print(gy); Serial.print("\t");
+    Serial.println(gz);*/
+
 }
