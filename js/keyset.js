@@ -123,11 +123,12 @@ function updateDisplay() {
 		displayString=displayString+currentLetter;
 		// doublecheck and clip display if it is >20char
 		if (displayString.length>20) {
-			displayString.substring(displayString.length-20,displayString.length);
+			displayString=displayString.substring(displayString.length-20,displayString.length);
 		}
 		// put the display in the div
 		var displayDiv=document.getElementById("displayText");
 		displayDiv.innerText=displayString;
+		console.log(displayString);
 	}
 }
 
@@ -360,6 +361,9 @@ function numberToLetter(number) {
 	}
 	else if (number==26) {
 		return 'Z';
+	}
+	else if (number==31) {
+		return " ";
 	}
 }
 

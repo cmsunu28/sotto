@@ -6,7 +6,25 @@ body p {
   font-size: 18px;
   font-weight: 300;
 }
-header {
+.canvas {
+  position: relative;
+  width: 900px;
+  margin: 0 auto;
+}
+#sidebarImg {
+  width: 120px;
+  margin: 10px 20px 10px 10px;
+  border: 2px solid #777777;
+  padding: 10px;
+  border-radius: 25px;
+}
+.interactive {
+  display: inline-block;
+  position: absolute;
+  width: 700px;
+  margin-right: 100px;
+}
+.header1 {
   background-color: #c7c7c7;
   border: 2px solid #777777;
   border-radius: 25px;
@@ -117,10 +135,58 @@ header {
   width: 100%;
   padding: 15px 0;
 }
+#0 {
+  color: #9b59b6;
+}
+#1 {
+  color: #3498db;
+}
+#2 {
+  color: #f1c40f;
+}
+#3 {
+  color: #e67e22;
+}
+#4 {
+  color: #c0392b;
+}
+#aKey {
+  border: 2px solid #c0392b;
+  color: #c0392b;
+}
+#aKey.pressedKey {
+  background-color: #c0392b;
+}
+#sKey {
+  border: 2px solid #e67e22;
+  color: #e67e22;
+}
+#sKey.pressedKey {
+  background-color: #e67e22;
+}
+#dKey {
+  border: 2px solid #f1c40f;
+  color: #f1c40f;
+}
+#dKey.pressedKey {
+  background-color: #f1c40f;
+}
+#fKey {
+  border: 2px solid #3498db;
+  color: #3498db;
+}
+#fKey.pressedKey {
+  background-color: #3498db;
+}
 #spaceKey {
   width: 360px;
   position: absolute;
   right: 5%;
+  border: 2px solid #9b59b6;
+  color: #9b59b6;
+}
+#spaceKey.pressedKey {
+  background-color: #9b59b6;
 }
 #keyBoxSpc {
   width: 360px;

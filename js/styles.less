@@ -6,6 +6,12 @@
 @keyContainerHeight:240px;
 @radius:25px;
 
+@color0:#9b59b6;
+@color1:#3498db;
+@color2:#f1c40f;
+@color3:#e67e22;
+@color4:#c0392b;
+
 body {
 	font-family: Poppins, Arial, sans-serif;
 	background-color:@bgColor;
@@ -15,7 +21,28 @@ body {
 	}
 }
 
-header {
+.canvas {
+	position:relative;
+	width:900px;
+	margin:0 auto;
+}
+
+#sidebarImg {
+	width:120px;
+	margin: 10px 20px 10px 10px;
+	border: 2px solid @strokeColor;
+	padding:10px;
+	border-radius: @radius;
+}
+
+.interactive {
+	display:inline-block;
+	position:absolute;
+	width:700px;
+	margin-right:100px;
+}
+
+.header1 {
 	background-color:@containerColor;
 	border: 2px solid @strokeColor;
 	border-radius:@radius;
@@ -139,11 +166,59 @@ header {
 	padding:15px 0;
 }
 
+#0 {
+	color:@color0;
+}
+
+#1 {
+	color:@color1;
+}
+
+#2 {
+	color:@color2;
+}
+
+#3 {
+	color:@color3;
+}
+
+#4 {
+	color:@color4;
+}
+
+
+#aKey {
+	border: 2px solid @color4;
+	color: @color4;
+}
+#aKey.pressedKey {background-color:@color4;}
+
+#sKey {
+	border: 2px solid @color3;
+	color: @color3;
+}
+#sKey.pressedKey {background-color:@color3;}
+
+#dKey {
+	border: 2px solid @color2;
+	color: @color2;
+}
+#dKey.pressedKey {background-color:@color2;}
+
+#fKey {
+	border: 2px solid @color1;
+	color: @color1;
+}
+#fKey.pressedKey {background-color:@color1;}
+
 #spaceKey {
 	width: 360px;
 	position: absolute;
 	right:5%;
+	border: 2px solid @color0;
+	color: @color0;
 }
+#spaceKey.pressedKey {background-color:@color0;}
 
 #keyBoxSpc {
 	width:360px;
