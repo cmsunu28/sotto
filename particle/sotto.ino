@@ -4,6 +4,11 @@
 #include "ADXL345.h"
 
 ADXL345 Accel;
+double x;
+double y;
+double z;
+
+int i=0;
 
 void setup(){
   Serial.begin(9600);
@@ -17,9 +22,18 @@ void setup(){
 void loop(){
     double accData[3];
     Accel.get_Gxyz(accData);
-    Serial.print("X: "+String(accData[0]));
-    Serial.print("   ");
-    Serial.print("Y: "+String(accData[1]));
-    Serial.print("   ");
-    Serial.println("Z: "+String(accData[2]));
+    x=accData[0];
+    y=accData[1];
+    z=accData[2];
+
+    // left hand orientation: relies on y, on 0 going to 245
+    // left hand on: 0 255 0
+
+    if (y>200) {
+      // then you have depressed a key
+      Serial.println("key pressed...");
+    }
+    else {
+      Serial.println();
+    }
 }

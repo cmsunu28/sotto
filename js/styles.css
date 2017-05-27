@@ -1,0 +1,145 @@
+body {
+  font-family: Poppins, Arial, sans-serif;
+  background-color: #f7f7f7;
+}
+body p {
+  font-size: 18px;
+  font-weight: 300;
+}
+header {
+  background-color: #c7c7c7;
+  border: 2px solid #777777;
+  border-radius: 25px;
+  font: Poppins, Arial, sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: #1abc9c;
+}
+#keyDisplayContainer {
+  background-color: #c7c7c7;
+  border: 2px solid #777777;
+  border-radius: 25px;
+  height: 150px;
+  margin: 20px 100px 20px 100px;
+  position: relative;
+}
+#keyDisplay {
+  background-color: #f7f7f7;
+  border-radius: 25px;
+  width: 90%;
+  position: absolute;
+  height: 100px;
+  top: 20px;
+  left: 5%;
+  display: inline-block;
+}
+#currentLetter {
+  display: inline-block;
+  background-color: #c7c7c7;
+  animation: blink-animation 1s steps(5, start) infinite;
+  -webkit-animation: blink-animation 1s steps(5, start) infinite;
+}
+@keyframes blink-animation {
+  to {
+    background-color: #f7f7f7;
+  }
+}
+@-webkit-keyframes blink-animation {
+  to {
+    background-color: #f7f7f7;
+  }
+}
+#typeText {
+  text-align: center;
+  font-size: 24px;
+  padding: 10px;
+}
+#keyContainer {
+  height: 240px;
+  border: 2px solid #777777;
+  background-color: #c7c7c7;
+  border-radius: 25px;
+  padding: 20px;
+  position: relative;
+  color: #1abc9c;
+}
+#keyTopRow {
+  position: absolute;
+  height: 33%;
+  width: 60%;
+  top: 20px;
+  left: 0;
+  padding: 20px 0 0 20px;
+}
+#keyBotRow {
+  position: absolute;
+  height: 33%;
+  width: 60%;
+  right: 0;
+  bottom: 20px;
+  padding: 20px 0 0 20px;
+}
+.keyBox {
+  display: inline-block;
+  border-radius: 25px;
+  width: 70px;
+  height: 70px;
+  padding: 10px;
+  color: #777777;
+  text-align: center;
+}
+.key {
+  border-radius: 25px;
+  width: 60px;
+  height: 60px;
+  border: 2px solid #777777;
+  background-color: #f7f7f7;
+  color: #1abc9c;
+  padding-bottom: 5px;
+}
+.pressedKey {
+  border-radius: 25px;
+  width: 60px;
+  height: 60px;
+  border: 2px solid #777777;
+  background-color: #1abc9c;
+  color: #1abc9c;
+  padding-bottom: 5px;
+}
+.note {
+  width: 60px;
+}
+#noteSpc {
+  padding: 70px 0 0 100px;
+}
+.keyText {
+  text-align: center;
+  width: 100%;
+  padding: 15px 0;
+}
+#spaceKey {
+  width: 360px;
+  position: absolute;
+  right: 5%;
+}
+#keyBoxSpc {
+  width: 360px;
+  height: 90px;
+}
+#buttonContainer {
+  width: 480px;
+  margin: 0 auto;
+  padding: 20px 10px 10px 20px;
+}
+.button {
+  color: #1abc9c;
+  width: 120px;
+  height: 30px;
+  display: inline-block;
+  border: 2px solid #1abc9c;
+  background-color: #f7f7f7;
+  margin: 0 15px;
+  padding: 15px 0;
+  text-align: center;
+  border-radius: 25px;
+}
