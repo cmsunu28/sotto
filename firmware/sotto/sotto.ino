@@ -59,12 +59,12 @@ int state=0;
 // 2: pending input
 // 3: recording input
 
-int mode=1;
-// 1: letters
-// 2: capitals
-// 3: punctuation
-// 4: numbers
-// 5: backspace
+int mode=0;
+// 0: letters
+// 1: alternate keys (shift, caps, enter)
+// 2: punctuation
+// 3: numbers
+// 4: backspace
 
 // mode timers
 int modeTimer=1000;
@@ -83,12 +83,6 @@ void setup() {
   pinMode(m3,OUTPUT);
   pinMode(m4,OUTPUT);
   pinMode(rwPin,INPUT);
-
-  // adafruit stuff
-  while (!Serial);  // required for Flora & Micro
-  delay(500);
-
-  Serial.begin(115200);
   
   /* Initialise the module */
   Serial.print(F("Initialising the Bluefruit LE module: "));
@@ -115,11 +109,10 @@ void setup() {
   /* Print Bluefruit information */
   ble.info();
 
-  // if single mode:
-//  enableKeyboard();
-//    enableMotors();
+  if (! ble.sendCommandCheckOK(F( "AT+GAPDEVNAME=Sotto" )) ) {
+    error(F("Could not set device name?"));
+  }
 
-  // dual mode
     rw=1;
     switchRwMode();
     lastRw=rw;
@@ -158,18 +151,19 @@ void loop() {
 void switchRwMode() {
   if (rw) {
     // if it is on, it's write
+    allBuzz();
     enableKeyboard();
   }
   else {
     // if it is off, then it's read mode
+    allBuzz();
+    delay(200);
+    allBuzz();
     enableMotors();
   }
 }
 
 void enableKeyboard() {
-  if (! ble.sendCommandCheckOK(F( "AT+GAPDEVNAME=Sotto" )) ) {
-    error(F("Could not set device name?"));
-  }
   /* Enable HID Service */
   Serial.println(F("Enable HID Service (including Keyboard): "));
   if ( ble.isVersionAtLeast(MINIMUM_FIRMWARE_VERSION) )
@@ -196,38 +190,47 @@ void checkKeyboard() {
     readKeys();
 
   // check for mode
-  if (millis()<(modeStart+1000)) {
-    if (state==0) {
-      if (thisRead!="00000") {
-        // input!
-        state=1;
-      }
-    }
+  // if in mode, set mode
 
-    else if (state==1) {
-      // wait for any change
-      if (thisRead!=lastRead && thisRead!="00000") {
-        lastEntry=combin(lastEntry,lastRead);
+  if (modeTimer<1000) {
+    if (modeTimer>1) {
+      if (state==0) {
+        if (thisRead!="00000") {
+          // input!
+          state=1;
+        }
       }
-      else if (thisRead=="00000") {
-        lastEntry=combin(lastEntry,lastRead);
-        state=2;
-      }
-      
-    }
 
-    else if (state==2) {
-      // translate mode
-      setMode(lastEntry);
-      modeStart=millis()-1001;
-      lastEntry="";
+      else if (state==1) {
+        // wait for any change
+        if (thisRead!=lastRead && thisRead!="00000") {
+          lastEntry=combin(lastEntry,lastRead);
+        }
+        else if (thisRead=="00000") {
+          lastEntry=combin(lastEntry,lastRead);
+          Serial.println(lastEntry);
+          setCharMode(lastEntry);
+          lastEntry="";
+          state=0;
+          modeTimer=1001;
+          Serial.println("Exiting mode switch...");
+        }
+      }  
+    
+      modeTimer--;
+    }
+    
+    else {
       state=0;
+      modeTimer=1000;
+      mode=0;
+      Serial.println("Mode timed out.");
     }
   }
 
+  else {
+
   // if there is input, send it
-  
-//  Serial.println(thisRead);
 
   if (state==0) {
     // wait for input
@@ -242,52 +245,85 @@ void checkKeyboard() {
     // wait for any change
     if (thisRead!=lastRead && thisRead!="00000") {
       lastEntry=combin(lastEntry,lastRead);
-//      Serial.println("state 2");
     }
     else if (thisRead=="00000") {
       lastEntry=combin(lastEntry,lastRead);
       state=2;
-//      Serial.println("state 2");
     }
-    
   }
 
   else if (state==2) {
     // check for mode
     if (lastEntry=="11100") {
       // change mode in the next second, otherwise revert
-      modeStart=millis();
+      modeTimer=999;
+      state=0;
+      Serial.println("Starting mode change!");
+      lastEntry="";
     }
     else {
       // if it is in letter mode (currently the only mode)
-      if (mode==1) {
+      if (mode==0) {
         val = letter(lastEntry);
+        Serial.println(val);
+        //send it
+        sendText(val);
+      }
+      else if (mode==1) {
+        // other keys
+        String keyVal = otherKeys(lastEntry);
+        ble.print("AT+BLEKEYBOARDCODE=");
+        ble.println(keyVal);
+        if( ble.waitForOK() ) {
+          Serial.println( F("OK!") );
+          delay(100);
+          ble.print("AT+BLEKEYBOARDCODE=00-00");
+          if( ble.waitForOK() ) {
+            Serial.println( F("OK!") );
+            state=0;
+          }
+          else {
+            Serial.println( F("FAILED!") );
+            int success=0;
+            // attempt to resend
+            delay(5);
+            while (success==0) {
+              ble.println("AT+BLEKEYBOARDCODE=00-00");
+                if( ble.waitForOK() ) {
+                Serial.println( F("OK!") );
+                state=0;
+                success=1;
+              }
+            }
+          }
+        }
+        else {
+          Serial.println( F("FAILED!") );
+          // sw reset
+          ble.reset();
+        }
       }
       else if (mode==2) {
-        // capital letters
-        val = letter(lastEntry);
-        val.toUpperCase();
-      }
-      else if (mode==3) {
         // punctuation
         val = punctuation(lastEntry);
+        Serial.println(val);
+        //send it
+        sendText(val);
       }
-      else if (mode==4) {
+      else if (mode==3) {
         char input[12];
         lastEntry.toCharArray(input,12);
         long decval = strtol(input, NULL, 2);
         val = String(decval, DEC);
+        Serial.println(val);
+        //send it
+        sendText(val);
       }
-    }
-    
-    Serial.println(val);
-    //send it
-
-    sendText(val);
     
     lastEntry="";
-//    Serial.println("state 0");
     state=0;
+    }
+  }
   }
 }
 
@@ -305,22 +341,32 @@ void sendText(String text) {
   }
   else {
     Serial.println( F("FAILED!") );
-    // remain in this state
-  }
+            int success=0;
+            // attempt to resend
+            delay(5);
+            while (success==0) {
+              ble.println("AT+BLEKEYBOARDCODE=00-00");
+                if( ble.waitForOK() ) {
+                Serial.println( F("OK!") );
+                state=0;
+                success=1;
+              }
+            }
+          }
 }
 
 void enableMotors() {
   //reset
-  Serial.println(F("Performing a factory reset: "));
-    if ( ! ble.factoryReset() ){
-      error(F("Couldn't factory reset"));
+  Serial.println(F("Performing a  reset: "));
+    if ( ! ble.reset() ){
+      error(F("Couldn't reset"));
     }
   
   Serial.println(F("Please use Adafruit Bluefruit LE app to connect in UART mode"));
   Serial.println(F("Then Enter characters to send to Bluefruit"));
   Serial.println();
 
-  ble.verbose(false);  // debug info is a little annoying after this point!
+  ble.verbose(false);
 
   /* Wait for connection */
   while (! ble.isConnected()) {
@@ -328,14 +374,6 @@ void enableMotors() {
   }
 
   Serial.println(F("******************************"));
-//
-//  // LED Activity command is only supported from 0.6.6
-//  if ( ble.isVersionAtLeast(MINIMUM_FIRMWARE_VERSION) )
-//  {
-//    // Change Mode LED Activity
-//    Serial.println(F("Change LED activity to " MODE_LED_BEHAVIOUR));
-//    ble.sendCommandCheckOK("AT+HWModeLED=" MODE_LED_BEHAVIOUR);
-//  }
 
   // Set module to DATA mode
   Serial.println( F("Switching to DATA mode!") );
@@ -369,12 +407,6 @@ void checkMotors() {
     // convert
     String h=String((char)c);
     convert(h);
-
-    // Hex output too, helps w/debugging!
-//    Serial.print(" [0x");
-//    if (c <= 0xF) Serial.print(F("0"));
-//    Serial.print(c, HEX);
-//    Serial.print("] ");
   }
 }
 
@@ -382,6 +414,20 @@ void buzz(int motor) {
   digitalWrite(motor,HIGH);
   delay(100);
   digitalWrite(motor,LOW);
+}
+
+void allBuzz() {
+  digitalWrite(m0,HIGH);
+  digitalWrite(m1,HIGH);
+  digitalWrite(m2,HIGH);
+  digitalWrite(m3,HIGH);
+  digitalWrite(m4,HIGH);
+  delay(100);
+  digitalWrite(m0,LOW);
+  digitalWrite(m1,LOW);
+  digitalWrite(m2,LOW);
+  digitalWrite(m3,LOW);
+  digitalWrite(m4,LOW);
 }
 
 String combin(String bin1, String bin2) {
@@ -403,12 +449,15 @@ void readKeys() {
 }
 
 
-void setMode(String bin) {
-  if (bin=="00001") {mode=1;}
+void setCharMode(String bin) {
+  if (bin=="00000") {mode=0;}
+  else if (bin=="11100") {mode=mode;} // no change. Technically this is a totally useless line of code, but I wanted to remember this "cancel" interaction.
+  else if (bin=="00001") {mode=1;}
   else if (bin=="00010") {mode=2;}
   else if (bin=="00100") {mode=3;}
   else if (bin=="01000") {mode=4;}
-  else if (bin=="10000") {mode=5;}
+  else if (bin=="10000") {mode=0;}
+  Serial.print("Setting mode to "); Serial.println(mode);
 }
 
 void convert(String l) {
@@ -441,7 +490,7 @@ void convert(String l) {
   else if (l=="x") {haptic("11000");}
   else if (l=="y") {haptic("11001");}
   else if (l=="z") {haptic("11010");}
-  else if (l==" ") {haptic("11111");}
+  else if (l==" ") {delay(500);}
 }
 
 void haptic(String bin) {
@@ -453,6 +502,7 @@ void haptic(String bin) {
   if (bin.substring(4,5)=="1") {digitalWrite(m0,HIGH);}
   delay(100);
   allOff();
+  delay(50);
 }
 
 void allOff() {
@@ -508,4 +558,10 @@ String punctuation(String bin) {
   else if (bin=="11001") {return "+";}
   else if (bin=="10001") {return "()";}
   else {return " ";}
+}
+
+String otherKeys(String bin) {
+  if (bin=="00010") {return "00-00-00-28-00-00";}// enter
+  else if (bin=="0000q") {return "00-00-00-2C-00-00";}// space
+  else if (bin=="10000") {return "00-00-00-2A-00-00";}//backspace
 }
