@@ -66,6 +66,8 @@ int mode=0;
 // 3: numbers
 // 4: backspace
 
+int con=0;
+
 // mode timers
 int modeTimer=1000;
 int modeStart;
@@ -137,14 +139,19 @@ void setup() {
 
 void loop() {
 
+  checkRw();
+
+  if (rw) { checkKeyboard(); }
+  else { checkMotors(); }
+
+}
+
+void checkRw() {
   rw=digitalRead(rwPin);
   if (rw!=lastRw) {
     switchRwMode();
     lastRw=rw;
   }
-
-  if (rw) { checkKeyboard(); }
-  else { checkMotors(); }
 
 }
 
@@ -183,6 +190,14 @@ void enableKeyboard() {
   if (! ble.reset() ) {
     error(F("Couldn't reset??"));
   }
+
+  /* Wait for connection */
+  while (!ble.isConnected() && rw==1) {
+      rw=digitalRead(rwPin);
+      delay(500);
+  }
+
+  if (!rw) {lastRw=0; enableMotors();}
 }
 
 
@@ -369,9 +384,12 @@ void enableMotors() {
   ble.verbose(false);
 
   /* Wait for connection */
-  while (! ble.isConnected()) {
+  while (!ble.isConnected() && rw!=1) {
+      rw=digitalRead(rwPin);
       delay(500);
   }
+
+  if (!rw) {
 
   Serial.println(F("******************************"));
 
@@ -380,6 +398,10 @@ void enableMotors() {
   ble.setMode(BLUEFRUIT_MODE_DATA);
 
   Serial.println(F("******************************"));
+  }
+
+  else {lastRw=1; enableKeyboard();}
+  
 }
 
 void checkMotors() {
